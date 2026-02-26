@@ -1,3 +1,14 @@
 node_modules/
 .env
 dist/
+
+# Node
+node_modules/
+.env
+
+# Angular
+frontend/.angular/
+frontend/dist/
+
+# Logs
+npm-debug.log*
