@@ -5,7 +5,7 @@ import { BehaviorSubject, tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-    private apiUrl = 'https://real-time-chat-application-by4f.onrender.com/api/auth';
+    private apiUrl = 'https://real-time-chat-application-23aa.onrender.com/api/auth';
     private userSubject = new BehaviorSubject<any>(this.getCurrentUser());
 
     constructor(private http: HttpClient, private router: Router) { }

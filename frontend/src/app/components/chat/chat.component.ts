@@ -141,7 +141,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     loadUsers() {
-        this.http.get<any>('https://real-time-chat-application-by4f.onrender.com/api/users').subscribe({
+        this.http.get<any>('https://real-time-chat-application-23aa.onrender.com/api/users').subscribe({
             next: (res) => {
                 if (res.success) {
                     this.users = res.data;
@@ -209,7 +209,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.loading = true;
         this.messages = [];
 
-        this.http.get<any>(`https://real-time-chat-application-by4f.onrender.com/api/chats/${userId}`).subscribe({
+        this.http.get<any>(`https://real-time-chat-application-23aa.onrender.com/api/chats/${userId}`).subscribe({
             next: (res) => {
                 if (res.success) {
                     this.messages = res.data;
@@ -234,7 +234,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.messages.push(messageData);
         this.socketService.sendMessage(messageData);
 
-        this.http.post<any>(`https://real-time-chat-application-by4f.onrender.com/api/chats/${this.selectedUser._id}`, { message: this.newMessage }).subscribe();
+        this.http.post<any>(`https://real-time-chat-application-23aa.onrender.com/api/chats/${this.selectedUser._id}`, { message: this.newMessage }).subscribe();
 
         this.newMessage = '';
         this.stopTyping();

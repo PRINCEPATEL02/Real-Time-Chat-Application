@@ -12,7 +12,7 @@ export class SocketService {
 
     connect() {
         if (!this.socket) {
-            this.socket = io('https://real-time-chat-application-by4f.onrender.com', {
+            this.socket = io('https://real-time-chat-application-23aa.onrender.com', {
                 transports: ['websocket', 'polling'],
                 reconnection: true,
                 reconnectionAttempts: 5
