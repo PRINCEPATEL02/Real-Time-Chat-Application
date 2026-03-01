@@ -9,6 +9,8 @@ node_modules/
 # Angular
 frontend/.angular/
 frontend/dist/
+frontend/.env
 
 # Logs
 npm-debug.log*
+
