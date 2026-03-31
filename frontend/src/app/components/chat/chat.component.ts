@@ -12,6 +12,7 @@ import { SocketService } from '../../services/socket.service';
     imports: [CommonModule, FormsModule],
     template: `
     <div class="chat-layout">
+
       <!-- Connection Status -->
       <div class="connection-status" [class.connected]="isConnected" [class.disconnected]="!isConnected">
         {{ isConnected ? '🟢 Connected' : '🔴 Reconnecting...' }}
@@ -20,24 +21,28 @@ import { SocketService } from '../../services/socket.service';
       <!-- Users Sidebar -->
       <div class="users-sidebar">
         <h3>Users</h3>
-        
+
         <div class="search-box">
           <input type="text" placeholder="Search users..." [(ngModel)]="searchTerm" (input)="filterUsers()">
         </div>
-        
+
         <div class="users-list">
           <div class="no-users" *ngIf="filteredUsers.length === 0">
             <p *ngIf="users.length === 0">No users found</p>
             <p *ngIf="users.length > 0">No users match your search</p>
           </div>
-          <div class="user-item" *ngFor="let user of filteredUsers" 
+
+          <div class="user-item" *ngFor="let user of filteredUsers"
                (click)="selectUser(user)"
                [class.active]="selectedUser?._id === user._id">
+
             <div class="user-avatar">{{ getInitial(user.username) }}</div>
+
             <div class="user-info">
               <h4>{{ user.username }}</h4>
               <p>{{ user.email }}</p>
             </div>
+
             <span class="online-indicator" *ngIf="isOnline(user._id)"></span>
           </div>
         </div>
@@ -45,16 +50,13 @@ import { SocketService } from '../../services/socket.service';
 
       <!-- Chat Area -->
       <div class="chat-area" *ngIf="selectedUser">
+
         <!-- Chat Header -->
         <div class="chat-header">
           <div class="user-avatar">{{ getInitial(selectedUser.username) }}</div>
           <div>
             <h4>{{ selectedUser.username }}</h4>
-<<<<<<< HEAD
-            <p style="font-size:rem; color: 0.85 #666;">
-=======
             <p style="font-size: 0.85rem; color: #666;">
->>>>>>> 587fbc3a (feature: inventory auto update logic added)
               <span *ngIf="typingUser">{{ typingUser }} is typing...</span>
               <span *ngIf="!typingUser && isOnline(selectedUser._id)">Online</span>
               <span *ngIf="!typingUser && !isOnline(selectedUser._id)">Offline</span>
@@ -64,52 +66,65 @@ import { SocketService } from '../../services/socket.service';
 
         <!-- Messages -->
         <div class="chat-messages" #messagesContainer>
+
           <div class="loading" *ngIf="loading">
             <div class="spinner"></div>
           </div>
-          
-          <div class="message fade-in" *ngFor="let msg of messages" 
-               [class.sent]="isSent(msg)" 
+
+          <div class="message fade-in"
+               *ngFor="let msg of messages"
+               [class.sent]="isSent(msg)"
                [class.received]="!isSent(msg)">
-<<<<<<< HEAD
-            <div class="sender" *ngIf="!isSent(msg)">{{ msg.sender?.username }}</div>
+
+            <!-- Sender -->
+            <div class="sender" *ngIf="!isSent(msg)">
+              {{ msg.sender?.username }}
+            </div>
+
+            <!-- Message -->
             <div class="content">{{ msg.message }}</div>
-            <div class="time">{{ formatTime(msg.createdAt) }}</div>
-            <div class="status" *ngIf="isSent(msg)" [class.read]="msg.isRead">
-              {{ msg.isRead ? '✓✓' : '✓' }}
-=======
-            <div class="content">{{ msg.message }}</div>
-            <div class="time">{{ formatTime(msg.createdAt) }}
-              <span class="status" *ngIf="isSent(msg)" [class.read]="msg.isRead">
+
+            <!-- Time + Status -->
+            <div class="time">
+              {{ formatTime(msg.createdAt) }}
+              <span class="status"
+                    *ngIf="isSent(msg)"
+                    [class.read]="msg.isRead">
                 {{ msg.isRead ? '✓✓' : '✓' }}
               </span>
->>>>>>> 587fbc3a (feature: inventory auto update logic added)
             </div>
+
           </div>
 
           <div class="typing-indicator" *ngIf="typingUser">
             {{ typingUser }} is typing...
           </div>
+
         </div>
 
-        <!-- Message Input -->
+        <!-- Input -->
         <div class="chat-input">
-          <input type="text" placeholder="Type a message..." 
+          <input type="text"
+                 placeholder="Type a message..."
                  [(ngModel)]="newMessage"
                  (keyup.enter)="sendMessage()"
                  (input)="onTyping()">
+
           <button (click)="sendMessage()">Send</button>
         </div>
+
       </div>
 
-      <!-- No Chat Selected -->
+      <!-- No Chat -->
       <div class="chat-area no-chat" *ngIf="!selectedUser">
         <p class="fade-in">Select a user to start chatting</p>
       </div>
+
     </div>
   `
 })
 export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
+
     @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
 
     currentUser: any;
@@ -168,12 +183,10 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.socketService.authenticate(this.currentUser.id);
 
         this.subscriptions.push(
-            this.socketService.isConnected().subscribe(connected => this.isConnected = connected),
-            this.socketService.getOnlineUsers().subscribe(users => this.onlineUsers = users),
+            this.socketService.isConnected().subscribe(c => this.isConnected = c),
+            this.socketService.getOnlineUsers().subscribe(u => this.onlineUsers = u),
 
             this.socketService.onReceiveMessage().subscribe(msg => {
-                // Only add message if it's from another user (not from current user)
-                // The current user's message is already added in sendMessage()
                 if (msg.sender._id !== this.currentUser.id && this.selectedUser &&
                     (msg.sender._id === this.selectedUser._id || msg.receiver._id === this.selectedUser._id)) {
                     this.messages.push(msg);
@@ -210,8 +223,8 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     selectUser(user: any) {
         this.selectedUser = user;
-        const userIds = [this.currentUser.id, user._id].sort();
-        this.roomId = userIds[0] + '_' + userIds[1];
+        const ids = [this.currentUser.id, user._id].sort();
+        this.roomId = ids[0] + '_' + ids[1];
 
         this.socketService.joinRoom(this.roomId);
         this.loadMessages(user._id);
@@ -223,9 +236,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
         this.http.get<any>(`http://localhost:3000/api/chats/${userId}`).subscribe({
             next: (res) => {
-                if (res.success) {
-                    this.messages = res.data;
-                }
+                if (res.success) this.messages = res.data;
                 this.loading = false;
             },
             error: () => this.loading = false
@@ -246,8 +257,9 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.messages.push(messageData);
         this.socketService.sendMessage(messageData);
 
-<<<<<<< HEAD
-        this.http.post<any>(`http://localhost:3000/api/chats/${this.selectedUser._id}`, { message: this.newMessage }).subscribe();
+        this.http.post<any>(`http://localhost:3000/api/chats/${this.selectedUser._id}`, {
+            message: this.newMessage
+        }).subscribe();
 
         this.newMessage = '';
         this.stopTyping();
@@ -268,15 +280,18 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     stopTyping() {
         if (this.roomId) {
-            this.socketService.stopTyping({ roomId: this.roomId, userId: this.currentUser.id });
+            this.socketService.stopTyping({
+                roomId: this.roomId,
+                userId: this.currentUser.id
+            });
         }
     }
 
     isSent(msg: any): boolean {
-        // sender can be an ObjectId string (from DB) or an object { _id, username } (from socket)
-        const senderId = (typeof msg.sender === 'object' && msg.sender !== null)
+        const senderId = (typeof msg.sender === 'object')
             ? (msg.sender._id || msg.sender.id)
             : msg.sender;
+
         const currentId = this.currentUser?.id || this.currentUser?._id;
         return String(senderId) === String(currentId);
     }
