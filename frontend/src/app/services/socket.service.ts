@@ -27,6 +27,10 @@ export class SocketService {
                 this.connectedSubject.next(false);
             });
 
+            this.socket.on('online_users', (data: { users: string[] }) => {
+                this.onlineUsersSubject.next(data.users);
+            });
+
             this.socket.on('user_online', (data: { userId: string }) => {
                 const current = this.onlineUsersSubject.value;
                 if (!current.includes(data.userId)) {

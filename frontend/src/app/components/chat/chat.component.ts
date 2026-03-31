@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { SocketService } from '../../services/socket.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
     selector: 'app-chat',
@@ -168,7 +169,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     loadUsers() {
-        this.http.get<any>('http://localhost:3000/api/users').subscribe({
+        this.http.get<any>(`${environment.apiUrl}/users`).subscribe({
             next: (res) => {
                 if (res.success) {
                     this.users = res.data;
@@ -187,28 +188,36 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
             this.socketService.getOnlineUsers().subscribe(u => this.onlineUsers = u),
 
             this.socketService.onReceiveMessage().subscribe(msg => {
-                if (msg.sender._id !== this.currentUser.id && this.selectedUser &&
-                    (msg.sender._id === this.selectedUser._id || msg.receiver._id === this.selectedUser._id)) {
-                    this.messages.push(msg);
+                if (this.roomId && msg.roomId === this.roomId) {
+                    const exists = this.messages.some(m => 
+                        m.tempId === msg.tempId || m._id === msg._id
+                    );
+                    if (!exists) {
+                        this.messages.push(msg);
+                    }
                 }
             }),
 
             this.socketService.onUserTyping().subscribe(data => {
-                if (this.selectedUser && data.userId === this.selectedUser._id) {
+                if (this.roomId && data.roomId === this.roomId && data.userId !== this.currentUser.id) {
                     this.typingUser = data.username;
                 }
             }),
 
-            this.socketService.onUserStopTyping().subscribe(() => {
-                this.typingUser = null;
+            this.socketService.onUserStopTyping().subscribe((data: any) => {
+                if (this.roomId && data.roomId === this.roomId) {
+                    this.typingUser = null;
+                }
             }),
 
             this.socketService.onMessageRead().subscribe(data => {
-                this.messages.forEach(msg => {
-                    if (data.messageIds.includes(msg._id)) {
-                        msg.isRead = true;
-                    }
-                });
+                if (this.roomId && data.roomId === this.roomId) {
+                    this.messages.forEach(msg => {
+                        if (data.messageIds.includes(msg._id)) {
+                            msg.isRead = true;
+                        }
+                    });
+                }
             })
         );
     }
@@ -234,7 +243,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.loading = true;
         this.messages = [];
 
-        this.http.get<any>(`http://localhost:3000/api/chats/${userId}`).subscribe({
+        this.http.get<any>(`${environment.apiUrl}/chats/${userId}`).subscribe({
             next: (res) => {
                 if (res.success) this.messages = res.data;
                 this.loading = false;
@@ -246,19 +255,22 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     sendMessage() {
         if (!this.newMessage.trim() || !this.selectedUser || !this.roomId) return;
 
+        const tempId = 'temp_' + Date.now();
+        
         const messageData = {
             roomId: this.roomId,
             sender: { _id: this.currentUser.id, username: this.currentUser.username },
             receiver: { _id: this.selectedUser._id, username: this.selectedUser.username },
             message: this.newMessage,
-            createdAt: new Date()
+            createdAt: new Date(),
+            tempId: tempId
         };
 
-        this.messages.push(messageData);
         this.socketService.sendMessage(messageData);
 
-        this.http.post<any>(`http://localhost:3000/api/chats/${this.selectedUser._id}`, {
-            message: this.newMessage
+        this.http.post<any>(`${environment.apiUrl}/chats/${this.selectedUser._id}`, {
+            message: this.newMessage,
+            tempId: tempId
         }).subscribe();
 
         this.newMessage = '';

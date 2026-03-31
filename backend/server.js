@@ -64,7 +64,7 @@ const io = socketIo(server, {
     perMessageDeflate: { threshold: 1024 }
 });
 
-// Track online users
+// Track online users: userId -> socketId
 const onlineUsers = new Map();
 
 // Socket Events
@@ -74,7 +74,11 @@ io.on('connection', (socket) => {
     socket.on('authenticate', (userId) => {
         onlineUsers.set(userId, socket.id);
         socket.userId = userId;
-        io.emit('user_online', { userId });
+        
+        const onlineList = Array.from(onlineUsers.keys());
+        socket.emit('online_users', { users: onlineList });
+        
+        socket.broadcast.emit('user_online', { userId });
     });
 
     socket.on('join_room', (roomId) => {
@@ -86,21 +90,32 @@ io.on('connection', (socket) => {
     });
 
     socket.on('send_message', (data) => {
-        io.to(data.roomId).emit('receive_message', {
+        const messagePayload = {
             ...data,
             timestamp: Date.now(),
-            status: 'delivered'
-        });
+            status: 'delivered',
+            tempId: data.tempId
+        };
+        
+        io.to(data.roomId).emit('receive_message', messagePayload);
     });
 
-    socket.on('typing', (data) => socket.to(data.roomId).emit('user_typing', data));
-    socket.on('stop_typing', (data) => socket.to(data.roomId).emit('user_stop_typing', data));
-    socket.on('mark_read', (data) => socket.to(data.roomId).emit('message_read', data));
+    socket.on('typing', (data) => {
+        socket.to(data.roomId).emit('user_typing', data);
+    });
+    
+    socket.on('stop_typing', (data) => {
+        socket.to(data.roomId).emit('user_stop_typing', data);
+    });
+    
+    socket.on('mark_read', (data) => {
+        socket.to(data.roomId).emit('message_read', data);
+    });
 
     socket.on('disconnect', () => {
         if (socket.userId) {
             onlineUsers.delete(socket.userId);
-            io.emit('user_offline', { userId: socket.userId });
+            socket.broadcast.emit('user_offline', { userId: socket.userId });
         }
     });
 });
