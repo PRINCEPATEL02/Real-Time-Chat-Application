@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class SocketService {
@@ -12,11 +13,7 @@ export class SocketService {
 
     connect() {
         if (!this.socket) {
-<<<<<<< HEAD
-            this.socket = io('https://real-time-chat-application-23aa.onrender.com', {
-=======
-            this.socket = io('http://localhost:3000', {
->>>>>>> 587fbc3a (feature: inventory auto update logic added)
+            this.socket = io(environment.socketUrl, {
                 transports: ['websocket', 'polling'],
                 reconnection: true,
                 reconnectionAttempts: 5

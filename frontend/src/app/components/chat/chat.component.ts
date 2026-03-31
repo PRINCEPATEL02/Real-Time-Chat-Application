@@ -153,11 +153,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     loadUsers() {
-<<<<<<< HEAD
-        this.http.get<any>('https://real-time-chat-application-23aa.onrender.com/api/users').subscribe({
-=======
         this.http.get<any>('http://localhost:3000/api/users').subscribe({
->>>>>>> 587fbc3a (feature: inventory auto update logic added)
             next: (res) => {
                 if (res.success) {
                     this.users = res.data;
@@ -225,11 +221,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.loading = true;
         this.messages = [];
 
-<<<<<<< HEAD
-        this.http.get<any>(`https://real-time-chat-application-23aa.onrender.com/api/chats/${userId}`).subscribe({
-=======
         this.http.get<any>(`http://localhost:3000/api/chats/${userId}`).subscribe({
->>>>>>> 587fbc3a (feature: inventory auto update logic added)
             next: (res) => {
                 if (res.success) {
                     this.messages = res.data;
@@ -255,10 +247,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.socketService.sendMessage(messageData);
 
 <<<<<<< HEAD
-        this.http.post<any>(`https://real-time-chat-application-23aa.onrender.com/api/chats/${this.selectedUser._id}`, { message: this.newMessage }).subscribe();
-=======
         this.http.post<any>(`http://localhost:3000/api/chats/${this.selectedUser._id}`, { message: this.newMessage }).subscribe();
->>>>>>> 587fbc3a (feature: inventory auto update logic added)
 
         this.newMessage = '';
         this.stopTyping();
@@ -284,16 +273,12 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     isSent(msg: any): boolean {
-<<<<<<< HEAD
-        return msg.sender._id === this.currentUser.id;
-=======
         // sender can be an ObjectId string (from DB) or an object { _id, username } (from socket)
         const senderId = (typeof msg.sender === 'object' && msg.sender !== null)
             ? (msg.sender._id || msg.sender.id)
             : msg.sender;
         const currentId = this.currentUser?.id || this.currentUser?._id;
         return String(senderId) === String(currentId);
->>>>>>> 587fbc3a (feature: inventory auto update logic added)
     }
 
     isOnline(userId: string): boolean {

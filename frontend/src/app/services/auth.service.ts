@@ -2,14 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-<<<<<<< HEAD
-    private apiUrl = 'https://real-time-chat-application-23aa.onrender.com/api/auth';
-=======
-    private apiUrl = 'http://localhost:3000/api/auth';
->>>>>>> 587fbc3a (feature: inventory auto update logic added)
+    private apiUrl = `${environment.apiUrl}/auth`;
     private userSubject = new BehaviorSubject<any>(this.getCurrentUser());
 
     constructor(private http: HttpClient, private router: Router) { }
