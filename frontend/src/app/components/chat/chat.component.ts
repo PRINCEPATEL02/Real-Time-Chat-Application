@@ -1,0 +1,318 @@
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { Subscription } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
+import { SocketService } from '../../services/socket.service';
+
+@Component({
+    selector: 'app-chat',
+    standalone: true,
+    imports: [CommonModule, FormsModule],
+    template: `
+    <div class="chat-layout">
+      <!-- Connection Status -->
+      <div class="connection-status" [class.connected]="isConnected" [class.disconnected]="!isConnected">
+        {{ isConnected ? '🟢 Connected' : '🔴 Reconnecting...' }}
+      </div>
+
+      <!-- Users Sidebar -->
+      <div class="users-sidebar">
+        <h3>Users</h3>
+        
+        <div class="search-box">
+          <input type="text" placeholder="Search users..." [(ngModel)]="searchTerm" (input)="filterUsers()">
+        </div>
+        
+        <div class="users-list">
+          <div class="no-users" *ngIf="filteredUsers.length === 0">
+            <p *ngIf="users.length === 0">No users found</p>
+            <p *ngIf="users.length > 0">No users match your search</p>
+          </div>
+          <div class="user-item" *ngFor="let user of filteredUsers" 
+               (click)="selectUser(user)"
+               [class.active]="selectedUser?._id === user._id">
+            <div class="user-avatar">{{ getInitial(user.username) }}</div>
+            <div class="user-info">
+              <h4>{{ user.username }}</h4>
+              <p>{{ user.email }}</p>
+            </div>
+            <span class="online-indicator" *ngIf="isOnline(user._id)"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Area -->
+      <div class="chat-area" *ngIf="selectedUser">
+        <!-- Chat Header -->
+        <div class="chat-header">
+          <div class="user-avatar">{{ getInitial(selectedUser.username) }}</div>
+          <div>
+            <h4>{{ selectedUser.username }}</h4>
+<<<<<<< HEAD
+            <p style="font-size:rem; color: 0.85 #666;">
+=======
+            <p style="font-size: 0.85rem; color: #666;">
+>>>>>>> 587fbc3a (feature: inventory auto update logic added)
+              <span *ngIf="typingUser">{{ typingUser }} is typing...</span>
+              <span *ngIf="!typingUser && isOnline(selectedUser._id)">Online</span>
+              <span *ngIf="!typingUser && !isOnline(selectedUser._id)">Offline</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-messages" #messagesContainer>
+          <div class="loading" *ngIf="loading">
+            <div class="spinner"></div>
+          </div>
+          
+          <div class="message fade-in" *ngFor="let msg of messages" 
+               [class.sent]="isSent(msg)" 
+               [class.received]="!isSent(msg)">
+<<<<<<< HEAD
+            <div class="sender" *ngIf="!isSent(msg)">{{ msg.sender?.username }}</div>
+            <div class="content">{{ msg.message }}</div>
+            <div class="time">{{ formatTime(msg.createdAt) }}</div>
+            <div class="status" *ngIf="isSent(msg)" [class.read]="msg.isRead">
+              {{ msg.isRead ? '✓✓' : '✓' }}
+=======
+            <div class="content">{{ msg.message }}</div>
+            <div class="time">{{ formatTime(msg.createdAt) }}
+              <span class="status" *ngIf="isSent(msg)" [class.read]="msg.isRead">
+                {{ msg.isRead ? '✓✓' : '✓' }}
+              </span>
+>>>>>>> 587fbc3a (feature: inventory auto update logic added)
+            </div>
+          </div>
+
+          <div class="typing-indicator" *ngIf="typingUser">
+            {{ typingUser }} is typing...
+          </div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="chat-input">
+          <input type="text" placeholder="Type a message..." 
+                 [(ngModel)]="newMessage"
+                 (keyup.enter)="sendMessage()"
+                 (input)="onTyping()">
+          <button (click)="sendMessage()">Send</button>
+        </div>
+      </div>
+
+      <!-- No Chat Selected -->
+      <div class="chat-area no-chat" *ngIf="!selectedUser">
+        <p class="fade-in">Select a user to start chatting</p>
+      </div>
+    </div>
+  `
+})
+export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
+    @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
+
+    currentUser: any;
+    users: any[] = [];
+    filteredUsers: any[] = [];
+    selectedUser: any = null;
+    messages: any[] = [];
+    newMessage = '';
+    roomId: string | null = null;
+    isConnected = false;
+    loading = false;
+    searchTerm = '';
+    typingUser: string | null = null;
+    onlineUsers: string[] = [];
+
+    private typingTimeout: any;
+    private subscriptions: Subscription[] = [];
+
+    constructor(
+        private http: HttpClient,
+        private authService: AuthService,
+        private socketService: SocketService
+    ) {
+        this.currentUser = this.authService.getCurrentUser();
+    }
+
+    ngOnInit() {
+        this.loadUsers();
+        this.connectSocket();
+    }
+
+    ngAfterViewChecked() {
+        this.scrollToBottom();
+    }
+
+    ngOnDestroy() {
+        this.subscriptions.forEach(sub => sub.unsubscribe());
+        if (this.roomId) {
+            this.socketService.leaveRoom(this.roomId);
+        }
+    }
+
+    loadUsers() {
+<<<<<<< HEAD
+        this.http.get<any>('https://real-time-chat-application-23aa.onrender.com/api/users').subscribe({
+=======
+        this.http.get<any>('http://localhost:3000/api/users').subscribe({
+>>>>>>> 587fbc3a (feature: inventory auto update logic added)
+            next: (res) => {
+                if (res.success) {
+                    this.users = res.data;
+                    this.filteredUsers = res.data;
+                }
+            }
+        });
+    }
+
+    connectSocket() {
+        this.socketService.connect();
+        this.socketService.authenticate(this.currentUser.id);
+
+        this.subscriptions.push(
+            this.socketService.isConnected().subscribe(connected => this.isConnected = connected),
+            this.socketService.getOnlineUsers().subscribe(users => this.onlineUsers = users),
+
+            this.socketService.onReceiveMessage().subscribe(msg => {
+                // Only add message if it's from another user (not from current user)
+                // The current user's message is already added in sendMessage()
+                if (msg.sender._id !== this.currentUser.id && this.selectedUser &&
+                    (msg.sender._id === this.selectedUser._id || msg.receiver._id === this.selectedUser._id)) {
+                    this.messages.push(msg);
+                }
+            }),
+
+            this.socketService.onUserTyping().subscribe(data => {
+                if (this.selectedUser && data.userId === this.selectedUser._id) {
+                    this.typingUser = data.username;
+                }
+            }),
+
+            this.socketService.onUserStopTyping().subscribe(() => {
+                this.typingUser = null;
+            }),
+
+            this.socketService.onMessageRead().subscribe(data => {
+                this.messages.forEach(msg => {
+                    if (data.messageIds.includes(msg._id)) {
+                        msg.isRead = true;
+                    }
+                });
+            })
+        );
+    }
+
+    filterUsers() {
+        const term = this.searchTerm.toLowerCase();
+        this.filteredUsers = this.users.filter(u =>
+            u.username.toLowerCase().includes(term) ||
+            u.email.toLowerCase().includes(term)
+        );
+    }
+
+    selectUser(user: any) {
+        this.selectedUser = user;
+        const userIds = [this.currentUser.id, user._id].sort();
+        this.roomId = userIds[0] + '_' + userIds[1];
+
+        this.socketService.joinRoom(this.roomId);
+        this.loadMessages(user._id);
+    }
+
+    loadMessages(userId: string) {
+        this.loading = true;
+        this.messages = [];
+
+<<<<<<< HEAD
+        this.http.get<any>(`https://real-time-chat-application-23aa.onrender.com/api/chats/${userId}`).subscribe({
+=======
+        this.http.get<any>(`http://localhost:3000/api/chats/${userId}`).subscribe({
+>>>>>>> 587fbc3a (feature: inventory auto update logic added)
+            next: (res) => {
+                if (res.success) {
+                    this.messages = res.data;
+                }
+                this.loading = false;
+            },
+            error: () => this.loading = false
+        });
+    }
+
+    sendMessage() {
+        if (!this.newMessage.trim() || !this.selectedUser || !this.roomId) return;
+
+        const messageData = {
+            roomId: this.roomId,
+            sender: { _id: this.currentUser.id, username: this.currentUser.username },
+            receiver: { _id: this.selectedUser._id, username: this.selectedUser.username },
+            message: this.newMessage,
+            createdAt: new Date()
+        };
+
+        this.messages.push(messageData);
+        this.socketService.sendMessage(messageData);
+
+<<<<<<< HEAD
+        this.http.post<any>(`https://real-time-chat-application-23aa.onrender.com/api/chats/${this.selectedUser._id}`, { message: this.newMessage }).subscribe();
+=======
+        this.http.post<any>(`http://localhost:3000/api/chats/${this.selectedUser._id}`, { message: this.newMessage }).subscribe();
+>>>>>>> 587fbc3a (feature: inventory auto update logic added)
+
+        this.newMessage = '';
+        this.stopTyping();
+    }
+
+    onTyping() {
+        if (!this.roomId) return;
+
+        this.socketService.sendTyping({
+            roomId: this.roomId,
+            userId: this.currentUser.id,
+            username: this.currentUser.username
+        });
+
+        if (this.typingTimeout) clearTimeout(this.typingTimeout);
+        this.typingTimeout = setTimeout(() => this.stopTyping(), 2000);
+    }
+
+    stopTyping() {
+        if (this.roomId) {
+            this.socketService.stopTyping({ roomId: this.roomId, userId: this.currentUser.id });
+        }
+    }
+
+    isSent(msg: any): boolean {
+<<<<<<< HEAD
+        return msg.sender._id === this.currentUser.id;
+=======
+        // sender can be an ObjectId string (from DB) or an object { _id, username } (from socket)
+        const senderId = (typeof msg.sender === 'object' && msg.sender !== null)
+            ? (msg.sender._id || msg.sender.id)
+            : msg.sender;
+        const currentId = this.currentUser?.id || this.currentUser?._id;
+        return String(senderId) === String(currentId);
+>>>>>>> 587fbc3a (feature: inventory auto update logic added)
+    }
+
+    isOnline(userId: string): boolean {
+        return this.onlineUsers.includes(userId);
+    }
+
+    getInitial(name: string): string {
+        return name ? name.charAt(0).toUpperCase() : '?';
+    }
+
+    formatTime(date: Date | string): string {
+        const d = new Date(date);
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    scrollToBottom() {
+        if (this.messagesContainer) {
+            const el = this.messagesContainer.nativeElement;
+            el.scrollTop = el.scrollHeight;
+        }
+    }
+}
