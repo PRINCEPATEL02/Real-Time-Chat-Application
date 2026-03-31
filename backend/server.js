@@ -29,11 +29,7 @@ app.use(compression({
 }));
 
 app.use(cors({
-<<<<<<< HEAD
-    origin: true, // Allow all origins for production
-=======
-    origin: process.env.CLIENT_URL || 'http://localhost:4200',
->>>>>>> 587fbc3a (feature: inventory auto update logic added)
+    origin: 'http://localhost:4200',
     credentials: true
 }));
 
@@ -59,11 +55,7 @@ mongoose.connect(MONGO_URI, {
 // Socket.io - Optimized
 const io = socketIo(server, {
     cors: {
-<<<<<<< HEAD
-        origin: true, // Allow all origins for production
-=======
-        origin: process.env.CLIENT_URL || 'http://localhost:4200',
->>>>>>> 587fbc3a (feature: inventory auto update logic added)
+        origin: process.env.CLIENT_URL || true, // Allow configured origin or all origins
         methods: ['GET', 'POST']
     },
     pingTimeout: 60000,
