@@ -29,7 +29,7 @@ app.use(compression({
 }));
 
 app.use(cors({
-    origin: 'http://localhost:4200',
+    origin: true,
     credentials: true
 }));
 
@@ -55,7 +55,7 @@ mongoose.connect(MONGO_URI, {
 // Socket.io - Optimized
 const io = socketIo(server, {
     cors: {
-        origin: process.env.CLIENT_URL || true, // Allow configured origin or all origins
+        origin: "*",
         methods: ['GET', 'POST']
     },
     pingTimeout: 60000,
