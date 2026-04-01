@@ -185,9 +185,9 @@ body {
     padding: 1rem;
 }
 
-/* Users Sidebar */
+/* Users Sidebar - Right Side */
 .users-sidebar {
-    width: 300px;
+    width: 320px;
     background: white;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -198,8 +198,9 @@ body {
 
 .users-sidebar h3 {
     padding: 1rem;
-    background: var(--light);
-    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border-bottom: none;
 }
 
 .search-box {
@@ -209,9 +210,10 @@ body {
 
 .search-box input {
     width: 100%;
-    padding: 0.5rem;
+    padding: 0.75rem;
     border: 1px solid var(--border);
-    border-radius: 5px;
+    border-radius: 20px;
+    font-size: 0.9rem;
 }
 
 .users-list {
@@ -241,24 +243,32 @@ body {
 
 .user-item:hover,
 .user-item.active {
-    background: var(--light);
+    background: #e8f4fd;
 }
 
 .user-avatar {
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.user-info {
+    flex: 1;
+    min-width: 0;
 }
 
 .user-info h4 {
-    font-size: 0.95rem;
+    font-size: 1rem;
     margin-bottom: 0.25rem;
+    color: var(--dark);
 }
 
 .user-info p {
@@ -266,12 +276,25 @@ body {
     color: #666;
 }
 
+.user-info .last-message {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.unread-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
 .online-indicator {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     background: var(--success);
-    margin-left: auto;
+    border: 2px solid white;
 }
 
 .unread-badge {
@@ -280,9 +303,10 @@ body {
     padding: 0.2rem 0.5rem;
     border-radius: 10px;
     font-size: 0.75rem;
+    font-weight: 600;
 }
 
-/* Chat Area */
+/* Chat Area - Left Side */
 .chat-area {
     flex: 1;
     background: white;
@@ -294,12 +318,42 @@ body {
 }
 
 .chat-header {
-    padding: 1rem;
+    padding: 1rem 1.5rem;
     background: var(--light);
     border-bottom: 1px solid var(--border);
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-header .header-left {
+    display: flex;
     align-items: center;
     gap: 1rem;
+}
+
+.chat-header .header-left .user-avatar {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+}
+
+.chat-header .header-left h4 {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.chat-header .header-right {
+    text-align: right;
+}
+
+.online-text {
+    color: var(--success);
+    font-weight: 500;
+}
+
+.offline-text {
+    color: #999;
 }
 
 .chat-messages {

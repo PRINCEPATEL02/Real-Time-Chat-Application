@@ -19,48 +19,23 @@ import { environment } from '../../../environments/environment';
         {{ isConnected ? '🟢 Connected' : '🔴 Reconnecting...' }}
       </div>
 
-      <!-- Users Sidebar -->
-      <div class="users-sidebar">
-        <h3>Users</h3>
-
-        <div class="search-box">
-          <input type="text" placeholder="Search users..." [(ngModel)]="searchTerm" (input)="filterUsers()">
-        </div>
-
-        <div class="users-list">
-          <div class="no-users" *ngIf="filteredUsers.length === 0">
-            <p *ngIf="users.length === 0">No users found</p>
-            <p *ngIf="users.length > 0">No users match your search</p>
-          </div>
-
-          <div class="user-item" *ngFor="let user of filteredUsers"
-               (click)="selectUser(user)"
-               [class.active]="selectedUser?._id === user._id">
-
-            <div class="user-avatar">{{ getInitial(user.username) }}</div>
-
-            <div class="user-info">
-              <h4>{{ user.username }}</h4>
-              <p>{{ user.email }}</p>
-            </div>
-
-            <span class="online-indicator" *ngIf="isOnline(user._id)"></span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Chat Area -->
+      <!-- Chat Area - Left Side -->
       <div class="chat-area" *ngIf="selectedUser">
 
-        <!-- Chat Header -->
+        <!-- Chat Header with User Name on Right -->
         <div class="chat-header">
-          <div class="user-avatar">{{ getInitial(selectedUser.username) }}</div>
-          <div>
-            <h4>{{ selectedUser.username }}</h4>
+          <div class="header-left">
+            <div class="user-avatar">{{ getInitial(selectedUser.username) }}</div>
+            <div>
+              <p style="font-size: 0.75rem; color: #666;">Chatting with</p>
+              <h4>{{ selectedUser.username }}</h4>
+            </div>
+          </div>
+          <div class="header-right">
             <p style="font-size: 0.85rem; color: #666;">
               <span *ngIf="typingUser">{{ typingUser }} is typing...</span>
-              <span *ngIf="!typingUser && isOnline(selectedUser._id)">Online</span>
-              <span *ngIf="!typingUser && !isOnline(selectedUser._id)">Offline</span>
+              <span *ngIf="!typingUser && isOnline(selectedUser._id)" class="online-text">● Online</span>
+              <span *ngIf="!typingUser && !isOnline(selectedUser._id)" class="offline-text">● Offline</span>
             </p>
           </div>
         </div>
@@ -121,6 +96,40 @@ import { environment } from '../../../environments/environment';
         <p class="fade-in">Select a user to start chatting</p>
       </div>
 
+      <!-- Users Sidebar - Right Side -->
+      <div class="users-sidebar">
+        <h3>Conversations</h3>
+
+        <div class="search-box">
+          <input type="text" placeholder="Search users..." [(ngModel)]="searchTerm" (input)="filterUsers()">
+        </div>
+
+        <div class="users-list">
+          <div class="no-users" *ngIf="filteredUsers.length === 0">
+            <p *ngIf="users.length === 0">No users found</p>
+            <p *ngIf="users.length > 0">No users match your search</p>
+          </div>
+
+          <div class="user-item" *ngFor="let user of filteredUsers"
+               (click)="selectUser(user)"
+               [class.active]="selectedUser?._id === user._id">
+
+            <div class="user-avatar">{{ getInitial(user.username) }}</div>
+
+            <div class="user-info">
+              <h4>{{ user.username }}</h4>
+              <p class="last-message" *ngIf="user.lastMessage">{{ user.lastMessage.message | slice:0:30 }}{{ user.lastMessage.message.length > 30 ? '...' : '' }}</p>
+              <p class="last-message" *ngIf="!user.lastMessage">No messages yet</p>
+            </div>
+
+            <div class="unread-info">
+              <span class="unread-badge" *ngIf="user.unreadCount > 0">{{ user.unreadCount }}</span>
+              <span class="online-indicator" *ngIf="isOnline(user._id)"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   `
 })
@@ -153,7 +162,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     ngOnInit() {
-        this.loadUsers();
+        this.loadConversations();
         this.connectSocket();
     }
 
@@ -166,6 +175,23 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         if (this.roomId) {
             this.socketService.leaveRoom(this.roomId);
         }
+    }
+
+    loadConversations() {
+        this.http.get<any>(`${environment.apiUrl}/conversations`).subscribe({
+            next: (res) => {
+                if (res.success) {
+                    this.users = res.data.map((conv: any) => ({
+                        _id: conv.user._id,
+                        username: conv.user.username,
+                        email: conv.user.email,
+                        lastMessage: conv.lastMessage,
+                        unreadCount: conv.unreadCount
+                    }));
+                    this.filteredUsers = [...this.users];
+                }
+            }
+        });
     }
 
     loadUsers() {
@@ -196,6 +222,9 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
                         this.messages.push(msg);
                     }
                 }
+                
+                // Update conversations list
+                this.loadConversations();
             }),
 
             this.socketService.onUserTyping().subscribe(data => {
@@ -237,6 +266,10 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
         this.socketService.joinRoom(this.roomId);
         this.loadMessages(user._id);
+        
+        this.http.put<any>(`${environment.apiUrl}/chats/read/${user._id}`, {}).subscribe();
+        
+        user.unreadCount = 0;
     }
 
     loadMessages(userId: string) {
